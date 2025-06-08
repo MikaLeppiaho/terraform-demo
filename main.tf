@@ -147,8 +147,3 @@ resource "azurerm_linux_virtual_machine" "vm" {
   custom_data = base64encode(templatefile("cloud-init.yml", {}))
 }
 
-resource "random_string" "acr_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
