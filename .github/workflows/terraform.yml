@@ -10,26 +10,34 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+      ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+      ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+      ARM_TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+
     defaults:
       run:
         working-directory: .
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        run: terraform init -backend-config="resource_group_name=tfstate-rg" \
-                                 -backend-config="storage_account_name=tfstate" \
-                                 -backend-config="container_name=state" \
-                                 -backend-config="key=demo.tfstate"
+        run: |
+         terraform init \
+         --backend-config="resource_group_name=tfstate-rg" \
+         --backend-config="storage_account_name=tfstatemika" \
+         --backend-config="container_name=state" \
+         --backend-config="key=demo.tfstate"
 
       - name: Terraform Format Check
         run: terraform fmt -check
@@ -40,7 +48,13 @@ jobs:
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
         run: terraform plan -out=plan.tfplan
-
+        
+      - name: PR Comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: plan.tfplan
+          
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve
