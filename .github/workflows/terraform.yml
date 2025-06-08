@@ -28,7 +28,7 @@ jobs:
         run: |
          terraform init \
          --backend-config="resource_group_name=tfstate-rg" \
-         --backend-config="storage_account_name=tfstate" \
+         --backend-config="storage_account_name=tfstatemika" \
          --backend-config="container_name=state" \
          --backend-config="key=demo.tfstate"
 
