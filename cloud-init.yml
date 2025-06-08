@@ -1,0 +1,36 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - nginx
+write_files:
+  - content: |
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+          
+          root /var/www/html;
+          index index.html index.htm index.nginx-debian.html;
+          
+          server_name _;
+          
+          location / {
+              try_files $uri $uri/ =404;
+          }
+      }
+    path: /etc/nginx/sites-available/default
+  - content: |
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Demo App</title>
+      </head>
+      <body>
+          <h1>Hello from Azure VM!</h1>
+          <p>This is running on a virtual machine in Azure.</p>
+      </body>
+      </html>
+    path: /var/www/html/index.html
+runcmd:
+  - systemctl start nginx
+  - systemctl enable nginx
+  - chown -R www-data:www-data /var/www/html

@@ -30,6 +30,17 @@ output "vm_web_urls" {
   }
 }
 
+output "ssh_private_key" {
+  description = "SSH private key for connecting to VMs"
+  value       = tls_private_key.vm_ssh.private_key_pem
+  sensitive   = true
+}
+
+output "ssh_public_key" {
+  description = "SSH public key used for VMs"
+  value       = tls_private_key.vm_ssh.public_key_openssh
+}
+
 output "vm_details" {
   description = "Complete VM details per region"
   value = {

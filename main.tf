@@ -4,6 +4,12 @@ resource "azurerm_resource_group" "rg" {
   location = each.value
 }
 
+# Generate SSH key pair for VMs
+resource "tls_private_key" "vm_ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 # Create Virtual Network for each region
 resource "azurerm_virtual_network" "vnet" {
   for_each            = azurerm_resource_group.rg
@@ -124,7 +130,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   admin_ssh_key {
     username   = "adminuser"
-    public_key = file("~/.ssh/id_rsa.pub") # You'll need to generate SSH keys
+    public_key = tls_private_key.vm_ssh.public_key_openssh
   }
 
   os_disk {
@@ -143,7 +149,46 @@ resource "azurerm_linux_virtual_machine" "vm" {
     storage_account_uri = azurerm_storage_account.vm_storage[each.key].primary_blob_endpoint
   }
 
-  # Install nginx using cloud-init
-  custom_data = base64encode(templatefile("cloud-init.yml", {}))
+  # Install nginx using cloud-init (inline)
+  custom_data = base64encode(<<-EOF
+    #cloud-config
+    package_upgrade: true
+    packages:
+      - nginx
+    write_files:
+      - content: |
+          server {
+              listen 80 default_server;
+              listen [::]:80 default_server;
+              
+              root /var/www/html;
+              index index.html index.htm index.nginx-debian.html;
+              
+              server_name _;
+              
+              location / {
+                  try_files $uri $uri/ =404;
+              }
+          }
+        path: /etc/nginx/sites-available/default
+      - content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Demo App - ${each.key}</title>
+          </head>
+          <body>
+              <h1>Hello from Azure VM in ${each.key}!</h1>
+              <p>This is running on a virtual machine in Azure region: ${each.key}</p>
+              <p>VM Name: ${var.resource_prefix}-vm-${each.key}</p>
+          </body>
+          </html>
+        path: /var/www/html/index.html
+    runcmd:
+      - systemctl start nginx
+      - systemctl enable nginx
+      - chown -R www-data:www-data /var/www/html
+  EOF
+  )
 }
 
