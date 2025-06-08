@@ -35,13 +35,13 @@ output "vm_details" {
   value = {
     for key, vm in azurerm_linux_virtual_machine.vm :
     key => {
-      name       = vm.name
-      location   = vm.location
-      size       = vm.size
-      public_ip  = azurerm_public_ip.vm_public_ip[key].ip_address
-      fqdn       = azurerm_public_ip.vm_public_ip[key].fqdn
+      name        = vm.name
+      location    = vm.location
+      size        = vm.size
+      public_ip   = azurerm_public_ip.vm_public_ip[key].ip_address
+      fqdn        = azurerm_public_ip.vm_public_ip[key].fqdn
       ssh_command = "ssh adminuser@${azurerm_public_ip.vm_public_ip[key].ip_address}"
-      web_url    = "http://${azurerm_public_ip.vm_public_ip[key].ip_address}"
+      web_url     = "http://${azurerm_public_ip.vm_public_ip[key].ip_address}"
     }
   }
 }
