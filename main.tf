@@ -13,7 +13,7 @@ resource "azurerm_container_group" "container" {
 
   container {
     name   = "demoapp"
-    image  = "mcr.microsoft.com/oss/nginx/nginx:1.21"
+    image  = "nginx:latest" # Consider using a more specific image
     cpu    = "0.5"
     memory = "1.5"
 
@@ -24,5 +24,6 @@ resource "azurerm_container_group" "container" {
   }
 
   ip_address_type = "Public"
-  dns_name_label  = "${var.resource_prefix}-${each.key}-dns"
+  dns_name_label  = lower("${var.resource_prefix}-${each.key}-dns") # Ensure lowercase for DNS
+
 }
