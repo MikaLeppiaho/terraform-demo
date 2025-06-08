@@ -26,10 +26,11 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        run: terraform init -backend-config="resource_group_name=tfstate-rg" \
-                                 -backend-config="storage_account_name=tfstate" \
-                                 -backend-config="container_name=state" \
-                                 -backend-config="key=demo.tfstate"
+        run: terraform init \
+          -backend-config resource_group_name=tfstate-rg \
+          -backend-config storage_account_name=tfstate \
+          -backend-config container_name=state \
+          -backend-config key=demo.tfstate
 
       - name: Terraform Format Check
         run: terraform fmt -check
