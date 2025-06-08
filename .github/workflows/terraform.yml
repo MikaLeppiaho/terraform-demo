@@ -10,23 +10,22 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    env:
-      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     defaults:
       run:
         working-directory: .
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Terraform Init
         run: |
          terraform init \
@@ -44,11 +43,13 @@ jobs:
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
         run: terraform plan -out=plan.tfplan
+        
       - name: PR Comment
         if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: plan.tfplan
+          
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve
